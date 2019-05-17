@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Tic-Tac-Toe</title>
+	<style type="text/css">
+		.row{
+			width: 100%;
+			display: flex;	
+			height: 33.3333%;
+		}
+		.cell{
+			width: 33.33333%;
+			line-height: 200%;
+			height:100%;
+			border: solid black 1px;
+			font-size: 70px;
+			color:#eee;
+			transition-property: color;
+			transition-duration: 1s;
+		}
+		.cell.show{
+			color:black;
+		}
+		
+		#container{
+			font-family: "Comic Sans MS", cursive, sans-serif;
+			text-align: center;
+			width: 400px;
+			height: 400px;
+			max-width: 100%;
+			margin: 0 auto;
+			background-color: #eee;
+			position: relative;
+			cursor: pointer;
+			border:solid black 5px;
+		}
+		#game-over{
+			display: none;
+			position: absolute;
+			color: rgb(20,20,20);
+			width: 100%;
+			height: 100%;
+			line-height: 3;
+			font-size: 40px;
+			background-color: rgba(150,150,150,0.90);
+			opacity: 0;
+			transition-property: opacity;
+			transition-duration: 1s;
+		}
+		#game-over.show{
+			opacity: 1;
+		}
+		#selectScreen{
+			display: none;
+			position: absolute;
+			width: 100%;
+			height: 100%;
+			line-height: 2;
+			font-size: 40px;
+			background-color: #eee;
+			opacity: 0;
+			transition-property: opacity;
+			transition-duration: 1s;
+		}
+		#selectScreen.show{
+			opacity: 1;
+		}
+		#selectWrapper{
+			display: flex;
+		}
+		.selectItem{
+			width: 50%;
+			font-size: 70px;
+			transition: font-size 1s;
+		}
+		.selectItem:hover{
+			font-size: 75px;
+		}
+		#selectText{
+			display: block;
+			width: 100%;
+			font-size: 40px;
+		}
+		#playerSelect{
+			display: none;
+			position: absolute;
+			width: 100%;
+			height: 100%;
+			line-height: 2;
+			font-size: 40px;
+			background-color: #eee;
+			opacity: 0;
+			transition-property: opacity;
+			transition-duration: 1s;
+		}
+		#playerSelect.show{
+			opacity: 1;
+		}
+		.expand{
+			font-size: 40px;
+			transition:font-size 1s;
+		}
+		.expand:hover{
+			font-size: 45px;
+		}
+		
+		#difScreen{
+			display: none;
+			position: absolute;
+			width: 100%;
+			height: 100%;
+			line-height: 2;
+			font-size: 40px;
+			background-color: #eee;
+			opacity: 0;
+			transition-property: opacity;
+			transition-duration: 1s;
+		}
+		#difScreen.show{
+			opacity: 1;
+		}
+		#main-game-screen{
+			display: none;
+			position: absolute;
+			width: 100%;
+			height: 100%;
+			opacity: 0;
+			transition-property: opacity;
+			transition-duration: 1s;
+		}
+		#main-game-screen.show{
+			opacity: 1;
+		}
+	</style>
+</head>
+<body>
+	<div id="container">
+		<!-- difficulty select screen -->
+		<div id="difScreen">
+			<div id="difTitle">Select Difficulty</div>
+			<div id="easy" class="difItem expand">Easy</div>
+			<div id="med" class="difItem expand">Normal</div>
+			<div id="hard" class="difItem expand">I don't want to win</div>
+		</div>
+		<!-- number of players option screen -->
+		<div id="playerSelect">
+			<div>Tic-Tac-Toe
+				<br>
+				How Many Players?
+			</div>
+			<div id="onePlayer" class="players-div expand">One Player</div>
+			<div id="twoPlayers" class="players-div expand">Two Players</div>
+		</div>
+		<!-- choose x or o -->
+		<div id="selectScreen">
+			<h1 id="selectText">Do you want to be X or O?</h1>
+			<div id="selectWrapper">
+				<div id="selectX" class="selectItem">X</div>
+				<div id="selectO" class="selectItem">O</div>
+			</div>
+		</div>
+		<!-- div holding all of the cells for the game board -->
+		<div id="main-game-screen">
+			<div id="game-over">
+				<div id="game-over-text" ></div>
+				<div id="play-again" class="expand">Play Again</div>
+				<div id="reset" class="expand">Reset</div>
+			</div>
+			<div class="row">
+				<div class="cell"></div>
+				<div class="cell"></div>
+				<div class="cell"></div>
+			</div>
+			<div class="row">
+				<div class="cell"></div>
+				<div class="cell"></div>
+				<div class="cell"></div>
+			</div>
+			<div class="row">
+				<div class="cell"></div>
+				<div class="cell"></div>
+				<div class="cell"></div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript">
+		// boolean to prevent clicking during transitions
+		var noClick=true;
+		// vars to show settings and keep track of turns
+		var huX=false;
+		var twoPlayerGame=false;
+		var playerTurn=false;
+		var difficulty="easy";
+		var playerOne="X";
+		var playerTwo="O";
+		// vars to get DOM elements
+		var gameOverDiv=document.querySelector("#game-over");
+		var gameOverText=document.querySelector("#game-over-text");
+		var playAgain=document.querySelector("#play-again");
+		var reset=document.querySelector("#reset");
+		var selectX=document.querySelector("#selectX");
+		var selectO=document.querySelector("#selectO");
+		var onePlayer=document.querySelector("#onePlayer");
+		var twoPlayers=document.querySelector("#twoPlayers");
+		var easy=document.querySelector("#easy");
+		var med=document.querySelector("#med");
+		var hard=document.querySelector("#hard");
+		var cells=document.querySelectorAll(".cell");
+		// container divs that act as different screens
+		var selectScreen=document.querySelector("#selectScreen");
+		var playerSelect=document.querySelector("#playerSelect");
+		var difScreen=document.querySelector("#difScreen");
+		var mainGameScreen=document.querySelector("#main-game-screen");
+		//function to fade in and out of screens.
+		//delays to to allow the fade effect after changing the display...
+		//...and to not overlap.
+		Object.prototype.fade = function(setting) {
+			// vari to use "this" inside of the setTimeout function
+			var holder=this;
+			if (setting=="block") {
+				this.style.display=setting;
+				window.setTimeout(function(){
+				holder.classList.toggle("show");
+			},100);
+			}else if (setting=="none") {
+				noClick=false
+				window.setTimeout(function(){
+				holder.style.display=setting;
+				noClick=true;
+			},900);
+				holder.classList.toggle("show");
+			}
+		};
+		//functions for the different game options
+		//they use "noClick" to not be used durring a transition
+		//reset after game over
+		function gameReset(){
+			if (noClick) {
+				//fade from game over and game board screens
+				gameOverDiv.fade("none");
+				mainGameScreen.fade("none");
+				//reset cells to blank
+				for (var i = 0; i < cells.length; i++) {
+					if (cells[i].textContent!=="") {
+						cells[i].fade("block");
+					}
+					cells[i].textContent="";
+				}
+			}
+		};
+		playAgain.onclick=function(){
+			gameReset();
+			//fade into select item screen
+			selectScreen.fade("block");
+		}
+		reset.onclick=function(){
+			if (noClick) {
+				gameReset();
+				//fade into number of players select screen
+				playerSelect.fade("block");
+			}
+		}
+		//select x or 0
+		function choseItem(){
+			selectScreen.fade("none");
+			mainGameScreen.fade("block");
+			playerTurn=false;
+			if (Math.floor(Math.random()*2)==0&&!twoPlayerGame) {
+				aiPlay();
+			}
+		}
+		selectX.onclick=function(){
+			if (noClick) {
+				huX=true;
+				
+				playerOne="X";
+				playerTwo="O";
+				choseItem();
+			}
+		};
+		selectO.onclick=function(){
+			if (noClick) {
+				huX=false;
+				
+				playerOne="O";
+				playerTwo="X";
+				playerTurn=false;
+				choseItem();
+			}
+		}
+		//select number of players
+		onePlayer.onclick=function(){
+			if (noClick) {
+				twoPlayerGame=false;
+				playerSelect.fade("none");
+				difScreen.fade("block");
+			}
+		};
+		twoPlayers.onclick=function(){
+			if (noClick) {
+				twoPlayerGame=true;
+				playerSelect.fade("none");
+				selectScreen.fade("block");
+			}
+		};
+		//select difficulty
+		function selectDif(dif){
+			if (noClick) {
+				difficulty=dif.target.id;
+				difScreen.fade("none");
+				selectScreen.fade("block");
+			}
+		};
+		easy.onclick=selectDif;
+		med.onclick=selectDif
+		hard.onclick=selectDif
+		//add place item function to all of the game board cells
+		for (var i = 0; i < cells.length; i++) {
+			cells[i].onclick=placeItem;
+		}
+		//function for placing item on board for human player
+		function placeItem(){
+			//check if square is blank and a transition isn't running
+			if (this.textContent==""&&noClick) {	
+				//two player uses boolean to change from x to o
+				if (twoPlayerGame) {
+					if(!playerTurn){
+						this.textContent=playerOne;
+						this.fade("block");
+						playerTurn=true;
+					}else{
+						this.textContent=playerTwo;
+						this.fade("block");
+						playerTurn=false;
+					}
+					//check for a game over position after every play
+					gameCheck(listEmpty())
+				}else{
+					//against the comp, a game over check is run
+					//after every play and if none is found the 
+					//aiPlay allows the computer to place an item
+					//after a .5 sec delay for effect
+					this.textContent=playerOne;
+					this.fade("block");
+					if(!gameCheck(listEmpty())){
+						noClick=false;
+						window.setTimeout(function(){
+							aiPlay();
+							noClick=true;
+						},500);
+					}
+				}
+			}
+		};
+		//creates an array of all of the currently empty cells
+		function listEmpty(){
+			var emptyCells=[]
+			for (var i = 0; i < cells.length; i++) {
+				if(cells[i].textContent==""){
+					emptyCells.push(cells[i])
+				}
+			}
+			return emptyCells;
+		};
+		//checks for a game over position or if the all the cells
+		//are filled and calls the game over sequence if true
+		function gameCheck(board){
+			var win=winLose();
+			if (win) {
+				gameOver(win);
+				return 1
+			}else{
+				if (board.length===0) {
+					gameOver("tie");
+					return 2
+				}
+			}
+		};
+		//function for computer turn
+		function aiPlay(){
+			//array of current empty cells
+			var emptys=listEmpty();
+			//random cell for the lower difficulties
+			var random=Math.floor(Math.random()*emptys.length);
+			var randomCell=emptys[random];
+			if (emptys.length>0) {
+				//easy dif the comp just pics a random empty square
+				if (difficulty=="easy") {
+					randomCell.textContent=playerTwo;
+					randomCell.fade("block");
+				}else if (difficulty=="med") {
+					//med-the ai places and x and o in each square and checks
+					//for game over position.  if true it plays that square, otherwise
+					//it pics a random square.
+					var nextMove=[];
+					nextMove.push(oneDeep(emptys, playerTwo));
+					nextMove.push(oneDeep(emptys, playerOne));
+					if (nextMove[0]){
+					emptys[nextMove[0].index].textContent=playerTwo;
+					emptys[nextMove[0].index].fade("block");
+					}else if (nextMove[1]){
+					emptys[nextMove[1].index].textContent=playerTwo;
+					emptys[nextMove[1].index].fade("block");
+					}else{
+					randomCell.textContent=playerTwo;
+					randomCell.fade("block");
+					}
+				}else if (difficulty=="hard") {
+					//hard-uses miniMax function to select best position
+					var hardMove=miniMax(emptys, playerTwo,true)
+					emptys[hardMove.index].textContent=playerTwo;
+					emptys[hardMove.index].fade("block");
+				}
+			}
+			//check for game over after each play
+			gameCheck(listEmpty());
+		};
+		//function for "med" difficulty.
+		function oneDeep(board, player){
+			//for each empty postion it places and x or o
+			for (var i = 0; i < board.length; i++) {
+				board[i].textContent=player;
+				//then checks for game over position and returns index;
+				if(huX&&winLose()=="winO"||!huX&&winLose()=="winX"){
+					board[i].textContent="";
+					return {index:i,
+						score:10};
+				}else if(huX&&winLose()=="winX"||!huX&&winLose()=="winO"){
+					board[i].textContent="";
+					return {index:i,
+						score:-10};
+				}else{
+					//resets the board after checking
+					board[i].textContent="";
+				}
+			}
+		};
+		//function for "hard" difficulty
+		function miniMax(board, player,maximize){
+			//vari to determine if to maximize or minimize score;
+			if(maximize){
+				var maximizeNext=false;
+			}else{
+				maximizeNext=true;
+			}
+			//vari to switch between x and o
+			if (player==playerTwo) {
+				var nextPlayer=playerOne;
+			}else{
+				nextPlayer=playerTwo
+			}
+			var moves=[];
+			var move={};
+			//return 0 if all postions are checked and no win or lose is found; cat's game
+			if (board.length===0) {
+				return{score:0};
+			}
+			//for each empty cell place and x or o
+			for (var i = 0; i < board.length; i++) {
+				board[i].textContent=player;
+				//then check for game over positions, reset board and 
+				//return values if found
+				if(huX&&winLose()=="winO"||!huX&&winLose()=="winX"){
+					board[i].textContent="";
+					return {index:i,
+						score:10}
+				}else if(huX&&winLose()=="winX"||!huX&&winLose()=="winO"){
+					board[i].textContent="";
+					return {index:i,
+						score:-10};
+				}else{
+					//other wise, run function again with the new board position and
+					//switch x and o and maximize preference.
+					var result=miniMax(listEmpty(),nextPlayer,maximizeNext);
+					//reset board and place the returned item in and array
+					board[i].textContent="";
+					moves.push({index:i,
+						score:result.score})
+				}
+			}
+			//sort through array of all of the positions and scores of all 
+			//potential moves. when comp is playing look to return highest score
+			//when human moves look to return the lowest score. return the index of
+			//the best cell.
+			if (maximize) {
+				var bestScore=-10000
+				var bestIndex;
+				for (var j = 0; j < moves.length; j++) {
+					if(moves[j].score>bestScore){
+						bestScore=moves[j].score;
+						bestIndex=j;
+					}
+				}
+				return moves[bestIndex];
+			}else{
+				 bestScore=10000
+				bestIndex;
+				for (j = 0; j < moves.length; j++) {
+					if(moves[j].score<bestScore){
+						bestScore=moves[j].score;
+						bestIndex=j;
+					}
+				}
+				return moves[bestIndex];
+			}
+		};
+		//a list of game ending postions
+		function winLose(){
+			if (cells[0].textContent=="X"&&cells[1].textContent=="X"&&cells[2].textContent=="X") {
+				return "winX"
+			}
+			if (cells[0].textContent=="O"&&cells[1].textContent=="O"&&cells[2].textContent=="O") {
+				return "winO"
+			}
+			if (cells[3].textContent=="X"&&cells[4].textContent=="X"&&cells[5].textContent=="X") {
+				return "winX"
+			}
+			if (cells[3].textContent=="O"&&cells[4].textContent=="O"&&cells[5].textContent=="O") {
+				return "winO"
+			}
+			if (cells[6].textContent=="X"&&cells[7].textContent=="X"&&cells[8].textContent=="X") {
+				return "winX"
+			}
+			if (cells[6].textContent=="O"&&cells[7].textContent=="O"&&cells[8].textContent=="O") {
+				return "winO"
+			}
+			if (cells[0].textContent=="X"&&cells[4].textContent=="X"&&cells[8].textContent=="X") {
+				return "winX"
+			}
+			if (cells[0].textContent=="O"&&cells[4].textContent=="O"&&cells[8].textContent=="O") {
+				return "winO"
+			}
+			if (cells[2].textContent=="X"&&cells[4].textContent=="X"&&cells[6].textContent=="X") {
+				return "winX"
+			}
+			if (cells[2].textContent=="O"&&cells[4].textContent=="O"&&cells[6].textContent=="O") {
+				return "winO"
+			}//
+			if (cells[0].textContent=="X"&&cells[3].textContent=="X"&&cells[6].textContent=="X") {
+				return "winX"
+			}
+			if (cells[0].textContent=="O"&&cells[3].textContent=="O"&&cells[6].textContent=="O") {
+				return "winO"
+			}
+			if (cells[1].textContent=="X"&&cells[4].textContent=="X"&&cells[7].textContent=="X") {
+				return "winX"
+			}
+			if (cells[1].textContent=="O"&&cells[4].textContent=="O"&&cells[7].textContent=="O") {
+				return "winO"
+			}
+			if (cells[2].textContent=="X"&&cells[5].textContent=="X"&&cells[8].textContent=="X") {
+				return "winX"
+			}
+			if (cells[2].textContent=="O"&&cells[5].textContent=="O"&&cells[8].textContent=="O") {
+				return "winO"
+			}
+		};
+		//game over sequence
+		function gameOver(win){
+			//show the game over screen
+			gameOverDiv.fade("block");
+			//change text depending on outcome
+			if (huX&&win=="winX"||!huX&&win=="winO") {
+				if (twoPlayerGame) {
+					gameOverText.textContent="Player One Wins!";
+				}else{
+					gameOverText.textContent="You Win!";
+				}
+			}if (huX&&win=="winO"||!huX&&win=="winX") {
+				if (twoPlayerGame) {
+					gameOverText.textContent="Player Two Wins!";
+				}else{
+					gameOverText.textContent="You Lose!";
+				}	
+			}if (win=="tie") {
+				gameOverText.textContent="Cat's Game!";
+			}
+
+		};
+		//starts game by showing the number of players select screen
+		playerSelect.fade("block");
+	</script>
+</body>
+</html>
